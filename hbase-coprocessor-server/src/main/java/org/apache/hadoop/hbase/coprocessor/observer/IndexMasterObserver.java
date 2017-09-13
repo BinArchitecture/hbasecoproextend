@@ -122,14 +122,14 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private void startOtherUnit(MasterCoprocessorEnvironment m) {
 //		String zk = m.getConfiguration().get("zookeeper.connect");
 		startBingo(m);
-		startRegionMonitor();
+		startRegionMonitor(m);
 	}
 	
 	private void startBingo(MasterCoprocessorEnvironment m) {
 		//读site配置文件获取bingo节点，使用脚本遍历节点启动bingo微服务
 		startAllBingoNodes(m);
 		//启动监控，校验节点在zk上是否存活，如果不存在，校验端口是否存在，如果存在，创建zk节点；否则重启服务
-		startBingoMonitor();
+		startBingoMonitor(m);
 	}
 
 	private void startAllBingoNodes(MasterCoprocessorEnvironment m) {

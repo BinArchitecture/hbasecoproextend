@@ -62,10 +62,8 @@ public class AdminMonitor extends BaseMonitor {
 			tc.connect(hap.getHost(), hap.getPort());
 			tc.disconnect();
 			return true;
-		} catch (SocketException e) {
-			LOG.error("telnel exception", e);
-		} catch (IOException e) {
-			LOG.error("telnel exception", e);
+		} catch (Exception e) {
+			LOG.error("telnet exception", e);
 		}
 		return false;
 	}

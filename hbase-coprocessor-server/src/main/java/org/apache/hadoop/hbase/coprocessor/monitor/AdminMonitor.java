@@ -1,7 +1,6 @@
 package org.apache.hadoop.hbase.coprocessor.monitor;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,11 +8,10 @@ import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.net.telnet.TelnetClient;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.hbase.client.coprocessor.Constants;
 import org.apache.hadoop.hbase.coprocessor.observer.HostAndPort;
 import org.apache.hadoop.hbase.coprocessor.util.ShellUtil;
-import org.apache.hadoop.hbase.zookeeper.RecoverableZooKeeper;
-import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +25,12 @@ public class AdminMonitor extends BaseMonitor {
     private static int initialDelay = 5;
     private static int period = 30;
     
-    public AdminMonitor(RecoverableZooKeeper zk, Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
+    public AdminMonitor(CuratorFramework zk, Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.hosts = hosts;
     }
     
-    public AdminMonitor(RecoverableZooKeeper zk, Map<String,HostAndPort> hosts, int initialDelay, int period) throws IOException, InterruptedException {
+    public AdminMonitor(CuratorFramework zk, Map<String,HostAndPort> hosts, int initialDelay, int period) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.hosts = hosts;
     }
@@ -62,10 +60,8 @@ public class AdminMonitor extends BaseMonitor {
 			tc.connect(hap.getHost(), hap.getPort());
 			tc.disconnect();
 			return true;
-		} catch (SocketException e) {
-			LOG.error("telnel exception", e);
-		} catch (IOException e) {
-			LOG.error("telnel exception", e);
+		} catch (Exception e) {
+			LOG.error("telnet exception", e);
 		}
 		return false;
 	}
@@ -75,7 +71,7 @@ public class AdminMonitor extends BaseMonitor {
 		try {
 			data = KryoUtil.kyroSeriLize(hap.getHost()+":"+hap.getPort(), -1);
 			createNodeEphemeralSequential(ZNODE + "/" + hap.getName(), data);
-		} catch (IOException |KeeperException |InterruptedException e) {
+		} catch (Exception e) {
 			LOG.error("增加bingo node到zk异常",e);
 		}
 	}

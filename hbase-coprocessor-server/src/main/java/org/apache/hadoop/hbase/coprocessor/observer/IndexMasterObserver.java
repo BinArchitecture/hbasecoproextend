@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -72,8 +73,10 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs.Ids;
 
 import com.alibaba.fastjson.JSON;
+import com.lppz.util.curator.CuratorFrameworkUtils;
 import com.lppz.util.http.BaseHttpClientsComponent;
 import com.lppz.util.http.enums.HttpMethodEnum;
+import com.lppz.util.kafka.constant.KafkaConstant.Consumer;
 import com.lppz.util.kafka.consumer.listener.KafkaConsumerListener;
 
 /**
@@ -87,11 +90,14 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private static final Log LOG = LogFactory.getLog(IndexMasterObserver.class
 			.getName());
 	public static String HOSTKEY = "hbase.bingo.hosts";
+	public static String BINGO_MONITOR_TIME = "hbase.bingo.monitor.time";
+	public static String RETION_MONITOR_TIME = "hbase.region.monitor.time";
 	private static RecoverableZooKeeper rz;
 	private static MetaTableIndex metaIndex;
 	private IdxHBaseKafkaMetaProducer kafkaProd;
 	private IdxHBaseKafkaEsMasterProducer kafkaEsProd;
 	private Map<String, HostAndPort> hostPorts;
+	private CuratorFramework zk;
 	@Override
 	public void start(CoprocessorEnvironment ctx) throws IOException {
 		if (rz == null) {
@@ -101,6 +107,8 @@ public class IndexMasterObserver extends BaseMasterObserver {
 						MasterCoprocessorEnvironment m = (MasterCoprocessorEnvironment) ctx;
 						rz = m.getMasterServices().getZooKeeper()
 								.getRecoverableZooKeeper();
+						String zkUrl = m.getConfiguration().get(Consumer.zookeeper_connect);
+						zk = CuratorFrameworkUtils.buildConnection(zkUrl);
 						try {
 							metaIndex=HbaseUtil.initMetaIndex(rz);
 							initKafkaConsumer(m.getConfiguration(),metaIndex);
@@ -120,14 +128,14 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private void startOtherUnit(MasterCoprocessorEnvironment m) {
 //		String zk = m.getConfiguration().get("zookeeper.connect");
 		startBingo(m);
-		startRegionMonitor();
+		startRegionMonitor(m);
 	}
 	
 	private void startBingo(MasterCoprocessorEnvironment m) {
 		//读site配置文件获取bingo节点，使用脚本遍历节点启动bingo微服务
 		startAllBingoNodes(m);
 		//启动监控，校验节点在zk上是否存活，如果不存在，校验端口是否存在，如果存在，创建zk节点；否则重启服务
-		startBingoMonitor();
+		startBingoMonitor(m);
 	}
 
 	private void startAllBingoNodes(MasterCoprocessorEnvironment m) {
@@ -135,7 +143,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 		String[] hostAndPorts = hosts.split(",");
 		hostPorts = new HashMap<>();
 		for (String hostAndPort : hostAndPorts) {
-			HostAndPort hap = new HostAndPort(hostAndPort, null);
+			HostAndPort hap = new HostAndPort(hostAndPort);
 			hostPorts.put(hap.getName(), hap);
 		}
 		
@@ -146,26 +154,28 @@ public class IndexMasterObserver extends BaseMasterObserver {
 		}
 	}
 	
-	private void startBingoMonitor() {
+	private void startBingoMonitor(MasterCoprocessorEnvironment m) {
 		try {
-			new AdminMonitor(rz, hostPorts, 20, 10).startMonitor();
+			int period = m.getConfiguration().getInt(BINGO_MONITOR_TIME, 30);
+			new AdminMonitor(zk, hostPorts, 20, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动bingo监控异常",e);
 		}
 	}
 
-	private void startRegionMonitor(){
+	private void startRegionMonitor(MasterCoprocessorEnvironment m){
 		try {
-			new RegionMonitor(rz, 1, 10).startMonitor();
+			int period = m.getConfiguration().getInt(RETION_MONITOR_TIME, 30);
+			new RegionMonitor(zk, 10, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动region监控异常",e);
 		}
 	}
 	
 	@Override
-	public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> ctx)
+	public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> ctx)
 		      throws IOException {
-		super.preShutdown(ctx);
+		super.preStopMaster(ctx);
 		stopBingo();
 	}
 

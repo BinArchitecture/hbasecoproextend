@@ -1,0 +1,16 @@
+!!com.lppz.configuration.hbase.HBaseConfigYamlBean {
+zkClientPort: '2181',
+zkQuorum: 'hanode1,hanode2,hanode3,hanode4,hanode5',
+hbaseRpcTimeOut: 30000,
+hbaseScanTimeoutPeriod: 60000,
+hbaseClientScannerCaching: 20,
+esBean: !!com.lppz.configuration.es.EsBaseYamlBean {
+esClusterPool: !!com.lppz.configuration.es.EsClusterPool {
+ maxTotal: 200,
+ maxIdle: 5,
+ maxWaitMillis: 5000
+},
+esclusterNode: [{host: 192.168.37.242,port: 9300},{host: 192.168.37.244,port: 9300},{host: 192.168.37.243,port: 9300},{host: 192.168.37.245,port: 9300},{host: 192.168.37.246,port: 9300},{host: 192.168.37.247,port: 9300}],
+clusterName: "es-lppz-cluster"
+}
+}

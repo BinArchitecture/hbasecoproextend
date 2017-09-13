@@ -1,0 +1,12 @@
+#!/bin/bash
+export HBASE_HOME=/opt/hbase-1.3.0
+cd hbase-coprocessor-protocol
+mvn dependency:copy-dependencies -DoutputDirectory=$HBASE_HOME/lib -DexcludeScope=provided
+cd ../hbase-coprocessor-client
+mvn dependency:copy-dependencies -DoutputDirectory=$HBASE_HOME/lib -DexcludeScope=provided
+cd ../hbase-coprocessor-server
+mvn dependency:copy-dependencies -DoutputDirectory=$HBASE_HOME/lib -DexcludeScope=provided
+cp -a target/*.jar $HBASE_HOME/lib
+rm -rf $HBASE_HOME/lib/snappy-java-1.0.4.1.jar
+rm -rf $HBASE_HOME/lib/disruptor-3.3.0.jar
+rm -rf $HBASE_HOME/lib/httpcore-4.1.3.jar

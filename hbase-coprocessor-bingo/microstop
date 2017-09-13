@@ -1,0 +1,2 @@
+#!/bin/bash
+java -DLOG_HOME=logbiz -Djava.ext.dirs=./lib org.apache.hadoop.hbase.Destory

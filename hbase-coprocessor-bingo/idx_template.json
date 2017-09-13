@@ -1,0 +1,39 @@
+{
+  "order": 0,
+  "template": "idx_hbase-*",
+  "settings": {
+    "index": {
+      "number_of_replicas": "0",
+      "number_of_shards": "14", 
+      "refresh_interval": "5s",
+      "max_result_window": "10000000"
+    }
+  },
+  "mappings": {
+    "_default_": {
+      "properties": {
+        "columnName": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "idxValue": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "prefix": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "familyName": {
+          "index": "not_analyzed",
+          "type": "string"
+        }
+      },
+      "_all": {
+        "enabled": true,
+        "omit_norms": true
+      }
+    }
+  },
+  "aliases": {}
+}

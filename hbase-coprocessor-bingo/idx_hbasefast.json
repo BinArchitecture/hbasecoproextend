@@ -1,0 +1,85 @@
+{
+  "order": 0,
+  "template": "idx_hbase-*",
+  "settings": {
+    "index": {
+      "warmer": {
+        "enabled": "false"
+      },
+      "store": {
+        "type": "mmapfs"
+      },
+      "number_of_replicas": "0",
+      "translog": {
+        "flush_threshold_ops": "1000000",
+        "translog": {
+          "flush_threshold_size": "1g",
+          "flush_threshold_period": "100m"
+        },
+        "durability": "async",
+        "sync_interval": "30s"
+      },
+      "refresh_integererval": "5s",
+      "max_result_window": "100000000",
+      "merge": {
+        "scheduler": {
+          "max_thread_count": "1"
+        },
+        "policy": {
+          "merge_factor": "15",
+          "floor_segment": "100mb",
+          "segments_per_tier": "25",
+          "min_merge_size": "10mb"
+        }
+      },
+      "routing": {
+        "allocation": {
+          "total_shards_per_node": "2"
+        }
+      },
+      "indices": {
+        "store": {
+          "throttle": {
+            "max_bytes_per_sec": "100mb"
+          }
+        }
+      },
+      "mapping": {
+        "_source": {
+          "compress": "true"
+        },
+        "_all": {
+          "enabled": "false"
+        }
+      },
+      "number_of_shards": "12"
+    }
+  },
+  "mappings": {
+    "_default_": {
+      "properties": {
+        "columnName": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "idxValue": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "prefix": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "familyName": {
+          "index": "not_analyzed",
+          "type": "string"
+        }
+      },
+      "_all": {
+        "enabled": false,
+        "omit_norms": true
+      }
+    }
+  },
+  "aliases": {}
+}

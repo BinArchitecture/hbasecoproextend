@@ -1,0 +1,8 @@
+#!/bin/bash
+targetDir="target/hbase-coprocessor-bingo"
+mvn clean dependency:copy-dependencies -DoutputDirectory=$targetDir/lib -DincludeScope=compile
+mvn install -Dmaven.test.skip=true
+cp -a target/*.jar $targetDir/lib
+cp -a target/conf $targetDir/
+cp -a startup_bingo $targetDir/
+cp -a microstop $targetDir/

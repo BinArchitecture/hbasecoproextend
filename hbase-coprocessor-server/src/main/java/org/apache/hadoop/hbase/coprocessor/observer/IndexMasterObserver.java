@@ -167,9 +167,9 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	}
 	
 	@Override
-	public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> ctx)
+	public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> ctx)
 		      throws IOException {
-		super.preShutdown(ctx);
+		super.preStopMaster(ctx);
 		stopBingo();
 	}
 

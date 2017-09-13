@@ -14,13 +14,12 @@ public class HostAndPort{
 			this.port = port;
 		}
 		
-		public HostAndPort(String hostAndNameAndPort, String bingohome) {
+		public HostAndPort(String hostAndNameAndPort) {
 			String [] tmp = hostAndNameAndPort.split(":");
 			if (tmp.length == 3) {
 				this.host = tmp[0];
 				this.name = tmp[1];
 				this.port = Integer.valueOf(tmp[2]);
-				this.bingohome = bingohome;
 			}
 		}
 		
@@ -60,8 +59,6 @@ public class HostAndPort{
 			builder.append(name);
 			builder.append(", port=");
 			builder.append(port);
-			builder.append(", bingohome=");
-			builder.append(bingohome);
 			builder.append("]");
 			return builder.toString();
 		}

@@ -87,6 +87,8 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private static final Log LOG = LogFactory.getLog(IndexMasterObserver.class
 			.getName());
 	public static String HOSTKEY = "hbase.bingo.hosts";
+	public static String BINGO_MONITOR_TIME = "hbase.bingo.monitor.time";
+	public static String RETION_MONITOR_TIME = "hbase.region.monitor.time";
 	private static RecoverableZooKeeper rz;
 	private static MetaTableIndex metaIndex;
 	private IdxHBaseKafkaMetaProducer kafkaProd;
@@ -135,7 +137,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 		String[] hostAndPorts = hosts.split(",");
 		hostPorts = new HashMap<>();
 		for (String hostAndPort : hostAndPorts) {
-			HostAndPort hap = new HostAndPort(hostAndPort, null);
+			HostAndPort hap = new HostAndPort(hostAndPort);
 			hostPorts.put(hap.getName(), hap);
 		}
 		
@@ -146,17 +148,19 @@ public class IndexMasterObserver extends BaseMasterObserver {
 		}
 	}
 	
-	private void startBingoMonitor() {
+	private void startBingoMonitor(MasterCoprocessorEnvironment m) {
 		try {
-			new AdminMonitor(rz, hostPorts, 20, 10).startMonitor();
+			int period = m.getConfiguration().getInt(BINGO_MONITOR_TIME, 30);
+			new AdminMonitor(rz, hostPorts, 20, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动bingo监控异常",e);
 		}
 	}
 
-	private void startRegionMonitor(){
+	private void startRegionMonitor(MasterCoprocessorEnvironment m){
 		try {
-			new RegionMonitor(rz, 1, 10).startMonitor();
+			int period = m.getConfiguration().getInt(RETION_MONITOR_TIME, 30);
+			new RegionMonitor(rz, 10, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动region监控异常",e);
 		}

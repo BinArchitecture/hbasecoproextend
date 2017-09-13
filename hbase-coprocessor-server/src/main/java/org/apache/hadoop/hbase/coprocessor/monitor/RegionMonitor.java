@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.hbase.coprocessor.util.ShellUtil;
-import org.apache.hadoop.hbase.zookeeper.RecoverableZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +21,11 @@ public class RegionMonitor extends BaseMonitor {
     private static int period = 30;
     private List<String> regionservers;
     
-    public RegionMonitor(RecoverableZooKeeper zk) throws IOException, InterruptedException {
+    public RegionMonitor(CuratorFramework zk) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.regionservers = fetchHostfromSlaveFile();
 	}
-    public RegionMonitor(RecoverableZooKeeper zk, int initialDelay, int period) throws IOException, InterruptedException {
+    public RegionMonitor(CuratorFramework zk, int initialDelay, int period) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.regionservers = fetchHostfromSlaveFile();
     }

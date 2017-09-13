@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -72,8 +73,10 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs.Ids;
 
 import com.alibaba.fastjson.JSON;
+import com.lppz.util.curator.CuratorFrameworkUtils;
 import com.lppz.util.http.BaseHttpClientsComponent;
 import com.lppz.util.http.enums.HttpMethodEnum;
+import com.lppz.util.kafka.constant.KafkaConstant.Consumer;
 import com.lppz.util.kafka.consumer.listener.KafkaConsumerListener;
 
 /**
@@ -94,6 +97,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private IdxHBaseKafkaMetaProducer kafkaProd;
 	private IdxHBaseKafkaEsMasterProducer kafkaEsProd;
 	private Map<String, HostAndPort> hostPorts;
+	private CuratorFramework zk;
 	@Override
 	public void start(CoprocessorEnvironment ctx) throws IOException {
 		if (rz == null) {
@@ -103,6 +107,8 @@ public class IndexMasterObserver extends BaseMasterObserver {
 						MasterCoprocessorEnvironment m = (MasterCoprocessorEnvironment) ctx;
 						rz = m.getMasterServices().getZooKeeper()
 								.getRecoverableZooKeeper();
+						String zkUrl = m.getConfiguration().get(Consumer.zookeeper_connect);
+						zk = CuratorFrameworkUtils.buildConnection(zkUrl);
 						try {
 							metaIndex=HbaseUtil.initMetaIndex(rz);
 							initKafkaConsumer(m.getConfiguration(),metaIndex);
@@ -151,7 +157,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private void startBingoMonitor(MasterCoprocessorEnvironment m) {
 		try {
 			int period = m.getConfiguration().getInt(BINGO_MONITOR_TIME, 30);
-			new AdminMonitor(rz, hostPorts, 20, period).startMonitor();
+			new AdminMonitor(zk, hostPorts, 20, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动bingo监控异常",e);
 		}
@@ -160,7 +166,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private void startRegionMonitor(MasterCoprocessorEnvironment m){
 		try {
 			int period = m.getConfiguration().getInt(RETION_MONITOR_TIME, 30);
-			new RegionMonitor(rz, 10, period).startMonitor();
+			new RegionMonitor(zk, 10, period).startMonitor();
 		} catch (IOException | InterruptedException e) {
 			LOG.error("启动region监控异常",e);
 		}

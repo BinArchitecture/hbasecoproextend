@@ -106,7 +106,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 							initKafkaConsumer(m.getConfiguration(),metaIndex);
 							kafkaProd=new IdxHBaseKafkaMetaProducer(Constants.KAFKASYNCFLUSH_TOPIC,m.getConfiguration());
 							kafkaEsProd=new IdxHBaseKafkaEsMasterProducer(Constants.KAFKASYNCESMASTERSYNC_TOPIC,m.getConfiguration());
-							startOtherUnit(m);
+//							startOtherUnit(m);
 						} catch (KeeperException | InterruptedException e) {
 							LOG.error(e.getMessage(),e);
 							throw new HbaseIdxMasterinitException(e.getMessage());

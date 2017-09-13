@@ -25,6 +25,11 @@ public class AdminMonitor extends BaseMonitor {
     private static int initialDelay = 5;
     private static int period = 30;
     
+    public AdminMonitor(Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
+    	super(null, null, initialDelay, period);
+    	this.hosts = hosts;
+	}
+    
     public AdminMonitor(CuratorFramework zk, Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.hosts = hosts;

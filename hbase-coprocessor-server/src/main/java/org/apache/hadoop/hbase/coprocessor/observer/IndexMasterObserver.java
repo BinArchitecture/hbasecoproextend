@@ -64,6 +64,8 @@ import org.apache.hadoop.hbase.coprocessor.kafka.producer.IdxHBaseKafkaEsMasterP
 import org.apache.hadoop.hbase.coprocessor.kafka.producer.IdxHBaseKafkaMetaProducer;
 import org.apache.hadoop.hbase.coprocessor.monitor.AdminMonitor;
 import org.apache.hadoop.hbase.coprocessor.monitor.RegionMonitor;
+import org.apache.hadoop.hbase.coprocessor.monitor.notify.BingoWatcher;
+import org.apache.hadoop.hbase.coprocessor.monitor.notify.RegionWatcher;
 import org.apache.hadoop.hbase.coprocessor.util.ShellUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.zookeeper.RecoverableZooKeeper;
@@ -74,6 +76,7 @@ import org.apache.zookeeper.ZooDefs.Ids;
 
 import com.alibaba.fastjson.JSON;
 import com.lppz.util.curator.CuratorFrameworkUtils;
+import com.lppz.util.curator.listener.ZookeeperProcessListen;
 import com.lppz.util.http.BaseHttpClientsComponent;
 import com.lppz.util.http.enums.HttpMethodEnum;
 import com.lppz.util.kafka.constant.KafkaConstant.Consumer;
@@ -98,6 +101,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	private IdxHBaseKafkaEsMasterProducer kafkaEsProd;
 	private Map<String, HostAndPort> hostPorts;
 	private CuratorFramework zk;
+	private ZookeeperProcessListen zkListen;
 	@Override
 	public void start(CoprocessorEnvironment ctx) throws IOException {
 		if (rz == null) {
@@ -109,6 +113,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 								.getRecoverableZooKeeper();
 						String zkUrl = m.getConfiguration().get(Consumer.zookeeper_connect);
 						zk = CuratorFrameworkUtils.buildConnection(zkUrl);
+						zkListen = new ZookeeperProcessListen();
 						try {
 							metaIndex=HbaseUtil.initMetaIndex(rz);
 							initKafkaConsumer(m.getConfiguration(),metaIndex);
@@ -155,19 +160,30 @@ public class IndexMasterObserver extends BaseMasterObserver {
 	}
 	
 	private void startBingoMonitor(MasterCoprocessorEnvironment m) {
+//		try {
+//			int period = m.getConfiguration().getInt(BINGO_MONITOR_TIME, 30);
+//			new AdminMonitor(zk, hostPorts, 20, period).startMonitor();
+//		} catch (IOException | InterruptedException e) {
+//			LOG.error("启动bingo监控异常",e);
+//		}
 		try {
-			int period = m.getConfiguration().getInt(BINGO_MONITOR_TIME, 30);
-			new AdminMonitor(zk, hostPorts, 20, period).startMonitor();
-		} catch (IOException | InterruptedException e) {
+			new BingoWatcher(hostPorts, zk, zkListen).addListen();
+		} catch (Exception e) {
 			LOG.error("启动bingo监控异常",e);
 		}
 	}
 
 	private void startRegionMonitor(MasterCoprocessorEnvironment m){
+//		try {
+//			int period = m.getConfiguration().getInt(RETION_MONITOR_TIME, 30);
+//			new RegionMonitor(zk, 10, period).startMonitor();
+//			new 
+//		} catch (IOException | InterruptedException e) {
+//			LOG.error("启动region监控异常",e);
+//		}
 		try {
-			int period = m.getConfiguration().getInt(RETION_MONITOR_TIME, 30);
-			new RegionMonitor(zk, 10, period).startMonitor();
-		} catch (IOException | InterruptedException e) {
+			new RegionWatcher(zk, zkListen).addListen();
+		} catch (Exception e) {
 			LOG.error("启动region监控异常",e);
 		}
 	}

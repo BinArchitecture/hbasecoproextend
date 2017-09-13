@@ -21,6 +21,11 @@ public class RegionMonitor extends BaseMonitor {
     private static int period = 30;
     private List<String> regionservers;
     
+    public RegionMonitor() throws IOException, InterruptedException {
+    	super(null, ZNODE, initialDelay, period);
+    	this.regionservers = fetchHostfromSlaveFile();
+	}
+    
     public RegionMonitor(CuratorFramework zk) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.regionservers = fetchHostfromSlaveFile();

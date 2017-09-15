@@ -62,6 +62,7 @@ import org.apache.hadoop.hbase.coprocessor.kafka.consumer.IdxHbaseSyncMetaZKCons
 import org.apache.hadoop.hbase.coprocessor.kafka.consumer.listener.IdxHbaseSyncMetaZKConsumerListener;
 import org.apache.hadoop.hbase.coprocessor.kafka.producer.IdxHBaseKafkaEsMasterProducer;
 import org.apache.hadoop.hbase.coprocessor.kafka.producer.IdxHBaseKafkaMetaProducer;
+
 import org.apache.hadoop.hbase.coprocessor.monitor.AdminMonitor;
 import org.apache.hadoop.hbase.coprocessor.monitor.RegionMonitor;
 import org.apache.hadoop.hbase.coprocessor.monitor.notify.BingoWatcher;
@@ -182,7 +183,7 @@ public class IndexMasterObserver extends BaseMasterObserver {
 //			LOG.error("启动region监控异常",e);
 //		}
 		try {
-			new RegionWatcher(zk, zkListen).addListen();
+			new RegionWatcher(hostPorts, zk, zkListen).addListen();
 		} catch (Exception e) {
 			LOG.error("启动region监控异常",e);
 		}

@@ -5,10 +5,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.hadoop.hbase.coprocessor.observer.HostAndPort;
 import org.apache.hadoop.hbase.coprocessor.util.ShellUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,13 @@ public class RegionMonitor extends BaseMonitor {
     private static int initialDelay = 5;
     private static int period = 30;
     private List<String> regionservers;
+    private Map<String,HostAndPort> hosts;
+    
+    public RegionMonitor(Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
+    	super(null, ZNODE, initialDelay, period);
+    	this.regionservers = fetchHostfromSlaveFile();
+    	this.hosts = hosts;
+	}
     
     public RegionMonitor() throws IOException, InterruptedException {
     	super(null, ZNODE, initialDelay, period);
@@ -79,10 +89,10 @@ public class RegionMonitor extends BaseMonitor {
 		for (String n:list) {
 			livenodes.add(n.split(",")[0]);
 		}
-		
 		for (int i=0; i<regionservers.size();i++) {
 			String node = regionservers.get(i);
-			if (livenodes.contains(node)) {
+			String name = getName(node);
+			if (livenodes.contains(node)||livenodes.contains(name)) {
 				continue;
 			}else {
 				lostnodes.add(node);
@@ -91,11 +101,23 @@ public class RegionMonitor extends BaseMonitor {
 		if (CollectionUtils.isNotEmpty(lostnodes)) {
 			for (String child:lostnodes) {
 				try {
+					LOG.warn("开始重启regionserver host {}", child);
 					ShellUtil.execute("restartRegion.sh "+ child);
 				} catch (IOException | InterruptedException | TimeoutException e) {
 					LOG.error("重启region异常",e);
 				}
 			}
 		}
+	}
+	
+	private String getName(String node) {
+		if (hosts != null) {
+			for (Entry<String, HostAndPort> entry : hosts.entrySet()) {
+				if (entry.getValue().getHost().equals(node)) {
+					return entry.getValue().getName().toLowerCase();
+				}
+			}
+		}
+		return null;
 	}
 }

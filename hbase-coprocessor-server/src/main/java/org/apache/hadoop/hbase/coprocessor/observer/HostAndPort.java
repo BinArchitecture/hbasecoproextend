@@ -3,7 +3,6 @@ public class HostAndPort{
 		private String host;
 		private String name;
 		private int port;
-		private String bingohome;
 		
 		public HostAndPort() {
 		}
@@ -42,14 +41,6 @@ public class HostAndPort{
 			this.port = port;
 		}
 		
-		public String getBingohome() {
-			return bingohome;
-		}
-
-		public void setBingohome(String bingohome) {
-			this.bingohome = bingohome;
-		}
-
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder();

@@ -25,6 +25,11 @@ public class AdminMonitor extends BaseMonitor {
     private static int initialDelay = 5;
     private static int period = 30;
     
+    public AdminMonitor(Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
+    	super(null, null, initialDelay, period);
+    	this.hosts = hosts;
+	}
+    
     public AdminMonitor(CuratorFramework zk, Map<String,HostAndPort> hosts) throws IOException, InterruptedException {
     	super(zk, ZNODE, initialDelay, period);
     	this.hosts = hosts;
@@ -69,6 +74,7 @@ public class AdminMonitor extends BaseMonitor {
 	private void addNodeToZk(HostAndPort hap) {
 		byte[] data;
 		try {
+			LOG.warn("开始添加bingoserver节点到zk host {}", hap.getHost());
 			data = KryoUtil.kyroSeriLize(hap.getHost()+":"+hap.getPort(), -1);
 			createNodeEphemeralSequential(ZNODE + "/" + hap.getName(), data);
 		} catch (Exception e) {
@@ -78,9 +84,10 @@ public class AdminMonitor extends BaseMonitor {
 
 	private void restartNode(HostAndPort hap) {
 		try {
+			LOG.warn("开始重启bingoserver host {}", hap.getHost());
 			ShellUtil.execute("startBingoServerSingle.sh " + hap.getHost());
 		} catch (Exception e) {
-			LOG.error(String.format("重启bingo服务异常,host:%s bingohome:%s", hap.getHost(), hap.getBingohome()),e);
+			LOG.error(String.format("重启bingo服务异常,host:%s ", hap.getHost()),e);
 		}
 	}
 
